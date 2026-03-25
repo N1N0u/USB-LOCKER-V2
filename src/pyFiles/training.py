@@ -5,77 +5,60 @@ import os
 
 
 def get_images_and_labels(path):
-    """
-    Load all face images and their IDs from dataset folder
-    Returns: face samples (numpy arrays) and corresponding IDs
-    """
-    # Get all image file paths
     image_paths = [os.path.join(path, f) for f in os.listdir(path)
                    if f.endswith(('.jpg', '.png'))]
 
     face_samples = []
     ids = []
 
-    # Load Haar Cascade for face detection during training
-    detector = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
+    # ✅ FIXED
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    project_src = os.path.dirname(base_dir)
+    cascade_path = os.path.join(project_src, "assets", "haarcascade_frontalface_default.xml")
+
+    face_detector = cv2.CascadeClassifier(cascade_path)
 
     for image_path in image_paths:
         try:
-            # Open image and convert to grayscale
-            pil_img = Image.open(image_path).convert('L')  # 'L' = grayscale
+            pil_img = Image.open(image_path).convert('L')
             img_numpy = np.array(pil_img, 'uint8')
 
-            # Extract ID from filename: User.ID.count.jpg
-            # Split by '.' and get the second element (index 1)
             filename = os.path.split(image_path)[-1]
             id = int(filename.split(".")[1])
 
-            # Detect face in the training image (for verification)
-            faces = detector.detectMultiScale(img_numpy)
+            # ✅ FIXED
+            faces = face_detector.detectMultiScale(img_numpy)
 
-            # If face found, add to training set
             for (x, y, w, h) in faces:
                 face_samples.append(img_numpy[y:y + h, x:x + w])
                 ids.append(id)
-                print(f"[INFO] Loaded: {filename} -> ID: {id}")
+                print(f"[INFO] Loaded: {filename} -> ID: {id}", flush=True)
 
         except Exception as e:
-            print(f"[WARNING] Error loading {image_path}: {e}")
-            continue
+            print(f"[WARNING] Error loading {image_path}: {e}", flush=True)
 
     return face_samples, ids
 
 
 def train_model():
-    # Create trainer folder if needed
     os.makedirs("trainer", exist_ok=True)
 
-    # Initialize LBPH face recognizer
-    # Parameters you can tune:
-    # radius: 1, neighbors: 8, grid_x: 8, grid_y: 8
-    recognizer = cv2.face.LBPHFaceRecognizer_create(
-        radius=1,
-        neighbors=8,
-        grid_x=8,
-        grid_y=8
-    )
+    recognizer = cv2.face.LBPHFaceRecognizer_create()
 
-    print("[INFO] Loading faces...")
+    print("[INFO] Loading faces...", flush=True)
+
     faces, ids = get_images_and_labels('dataset')
 
     if len(faces) == 0:
-        print("[ERROR] No training images found in 'dataset/' folder")
+        print("[ERROR] No training images found", flush=True)
         return
 
-    print(f"[INFO] Training on {len(faces)} face samples...")
+    print(f"[INFO] Training on {len(faces)} samples...", flush=True)
 
-    # Train the model
     recognizer.train(faces, np.array(ids))
-
-    # Save trained model
     recognizer.write('trainer/trainer.yml')
-    print(f"[INFO] Model trained and saved to trainer/trainer.yml")
-    print(f"[INFO] Unique IDs in model: {set(ids)}")
+
+    print("[INFO] Training completed", flush=True)
 
 
 if __name__ == "__main__":

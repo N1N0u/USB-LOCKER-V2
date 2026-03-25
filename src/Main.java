@@ -4,8 +4,14 @@ import javax.xml.stream.events.StartDocument;
 
 import java.awt.*;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import com.k33ptoo.components.KButton;
 import java.awt.event.ActionListener;
@@ -17,6 +23,8 @@ public class Main extends JFrame {
     static  String exist;
     KButton br,bt;
     JTabbedPane tabs;
+    private LockUnlock lu;
+    
     public Main() {
         initialize();
         exist=checkUserExist();
@@ -33,6 +41,19 @@ public class Main extends JFrame {
         	JOptionPane.showMessageDialog(null, "Please start Recon First to save your face");
         	tabs.setEnabledAt(1, false);
         }
+    	else
+    	{
+    		bt.setEnabled(true);
+    		File folder = new File("trainer");
+
+    		if (folder.exists() && folder.isDirectory()) {
+    			tabs.setEnabledAt(1, true);
+    		} else {
+    		    System.out.println("Folder does NOT exist");
+    		}
+    		
+    		
+    	}
 	}
 
 	private String checkUserExist() {
@@ -76,7 +97,79 @@ public class Main extends JFrame {
         JPanel btnPanel = new JPanel(new GridLayout(1, 2));
 
         JButton btnEnable = new JButton("Enable Protection");
+        btnEnable.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		DefaultTableModel model=(DefaultTableModel) table.getModel();
+        		int row=table.getSelectedRow();
+        		
+        		//get name
+        		String name=(String) model.getValueAt(row, 0);
+        		
+        		//remove 2 last carcters
+        		String result = name.substring(0, name.length() - 2);
+      		
+        			lu=new LockUnlock();
+        			int exitCode=lu.lockUsb(result);
+        			
+        			if(exitCode!=0) JOptionPane.showMessageDialog(null, "please check lock function");
+        		
+        		
+        	}
+        });
         JButton btnDisable = new JButton("Disable Protection");
+        btnDisable.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        		
+        		
+        		try {
+        			ProcessBuilder pb = new ProcessBuilder(
+            		        "python",
+            		        "src/pyFiles/face_recognition.py"
+            		);
+
+            		pb.redirectErrorStream(true);
+
+            		Process process = pb.start();
+
+            		BufferedReader reader = new BufferedReader(
+            		        new InputStreamReader(process.getInputStream()));
+
+            		String line;
+
+            		while ((line = reader.readLine()) != null) {
+            		    System.out.println(line);
+
+            		    if (line.contains("AUTHORIZED")) {
+            		        System.out.println("Face recognized → Unlock USB");
+
+                    		DefaultTableModel mod=(DefaultTableModel) table.getModel();
+                    		int row=table.getSelectedRow();
+                    		
+                    		//get name
+                    		String name=(String) mod.getValueAt(row, 0);
+                    		
+                    		//remove 2 last carcters
+                    		String result = name.substring(0, name.length() - 2);
+                    		
+                    		lu=new LockUnlock();
+                    		int exitCode=lu.UnlockUsb(result);
+                    		
+                    		if(exitCode!=0) JOptionPane.showMessageDialog(null, "please check unlock function");
+                    		else mod.setValueAt("Protecion disabled", row, 1);
+            		        break;
+            		    }
+            		}
+
+					process.waitFor();
+				} catch (InterruptedException | IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+        		
+
+        		
+        	}
+        });
 
         btnPanel.add(btnEnable);
         btnPanel.add(btnDisable);
@@ -98,7 +191,67 @@ public class Main extends JFrame {
                         br = new KButton();
                         br.addActionListener(new ActionListener() {
                         	public void actionPerformed(ActionEvent e) {
-                        		
+
+                        		 int exitCode=0;
+                                 // Start process
+                                
+                                 try {
+                                	    ProcessBuilder pb = new ProcessBuilder(
+                                	            "python",
+                                	            "src/pyFiles/face_dataset.py"
+                                	    );
+
+                                	    pb.redirectErrorStream(true); // merge error + output
+
+                                	    Process process = pb.start();
+
+                                	    BufferedReader reader = new BufferedReader(
+                                	            new InputStreamReader(process.getInputStream()));
+
+                                	    String line;
+                                	    while ((line = reader.readLine()) != null) {
+                                	        System.out.println(line);
+                                	    }
+
+                                	    
+                                	    exitCode = process.waitFor();
+                                	    System.out.println("Exited with code: " + exitCode);
+                                	    
+                                	    
+
+                                	} catch (Exception e1) {
+                                	    e1.printStackTrace();
+                                	}
+                                 
+                                 if(exitCode==0)
+                                 {
+                                	 Path path = Paths.get("dataset");
+
+                                	 try {
+                                	     if (Files.exists(path) && Files.isDirectory(path) &&
+                                	         Files.list(path).findAny().isPresent()) {
+                                	    	 FileWriter writer;
+                                	    	 writer = new FileWriter("check.txt", false);
+    										 writer.write("1");
+    	                                     writer.close();
+
+    	                                     System.out.println("File updated successfully");
+    	                                     bt.setEnabled(true);
+    	                                     
+    	                                     JOptionPane.showMessageDialog(null, "Run Tarining Now Pls !!");
+                                	     } else {
+                                	         System.out.println("Folder missing or empty");
+                                	     }
+                                	 } catch (IOException e1) {
+                                	     e1.printStackTrace();
+                                	 }
+                                	 
+							
+                                    
+                                 }
+                              
+
+                              
                         		
                         	}
                         });
@@ -114,6 +267,45 @@ public class Main extends JFrame {
                         activationPanel.add(br);
                         
                         bt = new KButton();
+                        bt.addActionListener(new ActionListener() {
+                        	public void actionPerformed(ActionEvent e) {
+                        		 int exitCode=0;
+                                 // Start process
+                                
+                                 try {
+                                	 ProcessBuilder pb = new ProcessBuilder(
+                                		        "python",
+                                		        "src/pyFiles/training.py"
+                                		);
+
+                                		pb.redirectErrorStream(true);
+
+                                		Process process = pb.start();
+
+                                		BufferedReader reader = new BufferedReader(
+                                		        new InputStreamReader(process.getInputStream()));
+
+                                		String line;
+                                		while ((line = reader.readLine()) != null) {
+                                		    System.out.println("[PYTHON] " + line);
+                                		}
+
+                                		exitCode = process.waitFor();
+                                		System.out.println("Exited with code: " + exitCode);
+                                	    
+                                	    
+
+                                	} catch (Exception e1) {
+                                	    e1.printStackTrace();
+                                	}
+                                 
+                                 if(exitCode==0)
+                                 {
+                                	 tabs.setEnabledAt(1, true);
+                                 }
+                                 
+                        	}
+                        });
                         bt.setkHoverForeGround(Color.WHITE);
                         bt.setFont(new Font("Times New Roman", Font.BOLD | Font.ITALIC, 30));
                         bt.setText("Train");
