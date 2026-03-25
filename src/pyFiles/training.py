@@ -11,7 +11,7 @@ def get_images_and_labels(path):
     face_samples = []
     ids = []
 
-    # ✅ FIXED
+    
     base_dir = os.path.dirname(os.path.abspath(__file__))
     project_src = os.path.dirname(base_dir)
     cascade_path = os.path.join(project_src, "assets", "haarcascade_frontalface_default.xml")
@@ -26,7 +26,7 @@ def get_images_and_labels(path):
             filename = os.path.split(image_path)[-1]
             id = int(filename.split(".")[1])
 
-            # ✅ FIXED
+            
             faces = face_detector.detectMultiScale(img_numpy)
 
             for (x, y, w, h) in faces:
