@@ -25,18 +25,17 @@ This project combines:
 ## 📸 Demo
 
 ### 📷 Data Collection
+![Data Collection](screenshots/data_collection.gif)
 
-![Data Collection](data.gif)
 
 ### 🧠 Training
+![Training](screenshots/training.gif)
 
-![Training](train.gif)
 
 ### 👁️ Recognition & Unlock
 
-![Recognition](recognition.gif)
+![Recognition](screenshots/recognition.gif)
 
-> Full demo available in `demo.mp4`
 
 ---
 
