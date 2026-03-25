@@ -11,7 +11,7 @@ def run_recognition():
 
     recognizer.read('trainer/trainer.yml')
 
-    # ✅ FIX cascade (بدون مشاكل paths)
+   
     face_cascade = cv2.CascadeClassifier(
         cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
     )
@@ -41,12 +41,12 @@ def run_recognition():
         for (x, y, w, h) in faces:
             id, confidence = recognizer.predict(gray[y:y + h, x:x + w])
 
-            # ✅ threshold مضبوط
+            
             if confidence < 60:
                 name = names.get(id, "User")
                 confidence_text = f"{round(100 - confidence)}%"
 
-                # 🔥 SIGNAL TO JAVA
+                #  SIGNAL TO JAVA
                 print("AUTHORIZED", flush=True)
 
                 recognized = True
